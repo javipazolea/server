@@ -3,7 +3,6 @@ const db = require('../../utils/db');
 
 const router = express.Router();
 
-// GET /api/productos - Obtener todos los productos
 router.get('/', async (req, res) => {
   try {
     // Realizar consulta SELECT ALL a la tabla productos
