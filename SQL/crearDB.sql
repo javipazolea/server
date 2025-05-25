@@ -381,3 +381,109 @@ INSERT INTO movimientos_inventario (producto_id, stock_anterior, stock_nuevo, ti
 (31, 150, 156, 'RESTOCK', 'Llegada camión Holcim', 4),
 (66, 2400, 2456, 'RESTOCK', 'Pedido masivo tornillos', 4),
 (52, 80, 78, 'VENTA', 'Venta equipos de seguridad', 2);
+
+--TABLAS PARA SISTEMA DE PAGOS
+
+-- 1. TABLA PRINCIPAL DE PAGOS
+CREATE TABLE IF NOT EXISTS pagos (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  orden_compra VARCHAR(50) NOT NULL UNIQUE,
+  cliente_id INT NULL,
+  session_id VARCHAR(255) NOT NULL,
+  monto DECIMAL(10, 2) NOT NULL,
+  moneda VARCHAR(3) DEFAULT 'CLP',
+  metodo_pago ENUM('webpay', 'transferencia', 'efectivo') NOT NULL,
+  estado ENUM('pendiente', 'procesando', 'aprobado', 'rechazado', 'anulado') DEFAULT 'pendiente',
+  -- Campos específicos de WebPay
+  token_webpay VARCHAR(255) NULL,
+  url_webpay TEXT NULL,
+  transaction_date TIMESTAMP NULL,
+  authorization_code VARCHAR(50) NULL,
+  payment_type_code VARCHAR(10) NULL,
+  response_code INT NULL,
+  installments_number INT DEFAULT 1,
+  -- Datos del comprador
+  email_comprador VARCHAR(100),
+  telefono_comprador VARCHAR(20),
+  -- Metadatos
+  descripcion TEXT,
+  datos_adicionales JSON,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  -- Índices
+  INDEX idx_orden_compra (orden_compra),
+  INDEX idx_cliente_id (cliente_id),
+  INDEX idx_session_id (session_id),
+  INDEX idx_estado (estado),
+  INDEX idx_token_webpay (token_webpay),
+  INDEX idx_fecha_transaccion (transaction_date),
+  -- Relaciones
+  FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 2. TABLA DE ITEMS DEL PAGO (detalle de productos pagados)
+CREATE TABLE IF NOT EXISTS pago_items (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  pago_id INT NOT NULL,
+  producto_id INT NOT NULL,
+  cantidad INT NOT NULL,
+  precio_unitario DECIMAL(10, 2) NOT NULL,
+  subtotal DECIMAL(10, 2) AS (cantidad * precio_unitario) STORED,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  -- Índices
+  INDEX idx_pago_id (pago_id),
+  INDEX idx_producto_id (producto_id),
+  -- Relaciones
+  FOREIGN KEY (pago_id) REFERENCES pagos(id) ON DELETE CASCADE,
+  FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 3. TABLA DE LOG DE TRANSACCIONES WEBPAY (para auditoría)
+CREATE TABLE IF NOT EXISTS webpay_log (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  pago_id INT NOT NULL,
+  operacion ENUM('crear_transaccion', 'confirmar_transaccion', 'verificar_estado', 'anular') NOT NULL,
+  request_data JSON,
+  response_data JSON,
+  codigo_respuesta VARCHAR(10),
+  mensaje_respuesta TEXT,
+  success BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  -- Índices
+  INDEX idx_pago_id (pago_id),
+  INDEX idx_operacion (operacion),
+  INDEX idx_success (success),
+  -- Relaciones
+  FOREIGN KEY (pago_id) REFERENCES pagos(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 4. INSERTAR DATOS DE EJEMPLO
+INSERT INTO pagos (orden_compra, cliente_id, session_id, monto, metodo_pago, estado, email_comprador, telefono_comprador, descripcion) VALUES
+('ORD-2024-001', 1, 'sess_123456789', 102980.00, 'webpay', 'aprobado', 'pedro.martinez@email.com', '+56912345678', 'Compra herramientas - Martillos y Taladro'),
+('ORD-2024-002', 2, 'sess_987654321', 74950.00, 'webpay', 'aprobado', 'carmen.lopez@email.com', '+56923456789', 'Compra materiales construcción'),
+('ORD-2024-003', NULL, 'sess_555666777', 14970.00, 'webpay', 'pendiente', 'cliente@temp.com', '+56911111111', 'Compra anónima - Destornilladores'),
+('ORD-2024-004', 3, 'sess_111222333', 607970.00, 'transferencia', 'procesando', 'roberto.hernandez@email.com', '+56934567890', 'Compra mayor - Sierra y tornillos');
+
+-- Insertar items de los pagos
+INSERT INTO pago_items (pago_id, producto_id, cantidad, precio_unitario) VALUES
+-- Pago 1 (Pedro Martínez)
+(1, 1, 2, 12990.00),  -- 2 Martillos Stanley
+(1, 16, 1, 89990.00), -- 1 Taladro Bosch
+-- Pago 2 (Carmen López)  
+(2, 31, 5, 4990.00),  -- 5 Sacos de Cemento
+(2, 42, 2, 19990.00), -- 2 Galones de Pintura
+(2, 86, 1, 7990.00),  -- 1 Flexómetro
+-- Pago 3 (Usuario anónimo)
+(3, 6, 3, 2990.00),   -- 3 Destornilladores Phillips
+(3, 14, 5, 1990.00),  -- 5 Llaves Allen
+-- Pago 4 (Roberto Hernández)
+(4, 25, 1, 599990.00), -- 1 Sierra Ingletadora
+(4, 66, 100, 290.00),  -- 100 Tornillos
+(4, 74, 2, 3990.00);   -- 2 kg de Clavos
+
+-- Insertar logs de ejemplo
+INSERT INTO webpay_log (pago_id, operacion, request_data, response_data, codigo_respuesta, mensaje_respuesta, success) VALUES
+(1, 'crear_transaccion', '{"amount": 102980, "buy_order": "ORD-2024-001"}', '{"token": "01ab23cd45ef67890", "url": "https://webpay3gint.transbank.cl/webpayserver/initTransaction"}', '0', 'Transacción creada exitosamente', TRUE),
+(1, 'confirmar_transaccion', '{"token": "01ab23cd45ef67890"}', '{"response_code": 0, "authorization_code": "1234567890"}', '0', 'Transacción aprobada', TRUE),
+(2, 'crear_transaccion', '{"amount": 74950, "buy_order": "ORD-2024-002"}', '{"token": "02bc34de56fg78901", "url": "https://webpay3gint.transbank.cl/webpayserver/initTransaction"}', '0', 'Transacción creada exitosamente', TRUE),
+(2, 'confirmar_transaccion', '{"token": "02bc34de56fg78901"}', '{"response_code": 0, "authorization_code": "0987654321"}', '0', 'Transacción aprobada', TRUE);
