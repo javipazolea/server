@@ -20,6 +20,10 @@ CREATE TABLE IF NOT EXISTS productos (
   INDEX idx_subcategoria (subcategoria)
 );
 
+--activar (1) o desactivar (0) modo seguro (safe mode) en caso de error 
+-- SET SQL_SAFE_UPDATES = 0;
+
+
 -- Insertar productos
 INSERT INTO productos (id, sku, descripcion, categoria, subcategoria, precio, unidades) VALUES
 (1, '100001', 'Martillo de Carpintero Stanley 16oz', 'Herramientas Manuales', 'Martillos', 12990.00, 45),
@@ -280,3 +284,16 @@ INSERT INTO sucursales (nombre, direccion, comuna, telefono, email, horario_aten
 ('FERREMAS Puente Alto', 'Av. Concha y Toro 1789', 'Puente Alto', '+56225551008', 'puentealto@ferremas.cl', 'Lunes a Viernes 8:30-18:30, Sábados 9:00-15:00'),
 ('FERREMAS Quilicura', 'Av. Matta 2345', 'Quilicura', '+56225551009', 'quilicura@ferremas.cl', 'Lunes a Viernes 8:00-18:00, Sábados 8:30-14:30'),
 ('FERREMAS Santiago Centro', 'Alameda 1567', 'Santiago', '+56225551010', 'centro@ferremas.cl', 'Lunes a Viernes 8:00-19:00, Sábados 9:00-16:00');
+
+--modificar las tablas productos y categorias para tener columnas de activo
+
+-- Agregar campo activo a productos
+ALTER TABLE ferremas_db.productos ADD COLUMN activo BOOLEAN DEFAULT TRUE;
+
+-- Agregar campo activa a categories
+ALTER TABLE ferremas_db.categories ADD COLUMN activa BOOLEAN DEFAULT TRUE;
+
+-- Actualizar todos los registros existentes como activos
+UPDATE ferremas_db.productos SET activo = TRUE;
+UPDATE ferremas_db.categories SET activa = TRUE;
+
