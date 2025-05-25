@@ -257,6 +257,7 @@ INSERT INTO clientes (rut, nombre, apellido, email, telefono, direccion, ciudad,
 ('01234567-8', 'Valentina', 'Soto', 'valentina.soto@email.com', '+56901234567', 'Arturo Prat 246', 'Puerto Montt', 'Los Lagos');
 
 -- Crear tabla de sucursales
+
 CREATE TABLE IF NOT EXISTS sucursales (
   id INT AUTO_INCREMENT PRIMARY KEY,
   nombre VARCHAR(100) NOT NULL,
@@ -297,3 +298,86 @@ ALTER TABLE ferremas_db.categories ADD COLUMN activa BOOLEAN DEFAULT TRUE;
 UPDATE ferremas_db.productos SET activo = TRUE;
 UPDATE ferremas_db.categories SET activa = TRUE;
 
+-- CARRITO
+CREATE TABLE IF NOT EXISTS carritos (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  session_id VARCHAR(255) NOT NULL,
+  cliente_id INT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_session_id (session_id),
+  INDEX idx_cliente_id (cliente_id),
+  FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE
+);
+
+-- Tabla de items del carrito
+CREATE TABLE IF NOT EXISTS carrito_items (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  carrito_id INT NOT NULL,
+  producto_id INT NOT NULL,
+  cantidad INT NOT NULL DEFAULT 1,
+  precio_unitario DECIMAL(10, 2) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_carrito_id (carrito_id),
+  INDEX idx_producto_id (producto_id),
+  FOREIGN KEY (carrito_id) REFERENCES carritos(id) ON DELETE CASCADE,
+  FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE CASCADE,
+  UNIQUE KEY unique_carrito_producto (carrito_id, producto_id)
+);
+
+-- Insertar datos de ejemplo
+-- Carritos de ejemplo (simulando sesiones de usuarios)
+INSERT INTO carritos (session_id, cliente_id) VALUES
+('sess_123456789', 1),
+('sess_987654321', 2),
+('sess_555666777', NULL), -- Usuario anónimo
+('sess_111222333', 3);
+
+-- Items de carrito de ejemplo
+INSERT INTO carrito_items (carrito_id, producto_id, cantidad, precio_unitario) VALUES
+-- Carrito 1 (cliente Pedro Martínez)
+(1, 1, 2, 12990.00),  -- 2 Martillos Stanley
+(1, 16, 1, 89990.00), -- 1 Taladro Bosch
+(1, 52, 1, 15990.00), -- 1 Casco de Seguridad
+
+-- Carrito 2 (cliente Carmen López)
+(2, 31, 5, 4990.00),  -- 5 Sacos de Cemento
+(2, 42, 2, 19990.00), -- 2 Galones de Pintura
+(2, 86, 1, 7990.00),  -- 1 Flexómetro
+
+-- Carrito 3 (usuario anónimo)
+(3, 6, 3, 2990.00),   -- 3 Destornilladores Phillips
+(3, 14, 5, 1990.00),  -- 5 Llaves Allen
+
+-- Carrito 4 (cliente Roberto Hernández)
+(4, 25, 1, 599990.00), -- 1 Sierra Ingletadora Makita
+(4, 66, 100, 290.00),  -- 100 Tornillos Autoperforantes
+(4, 74, 2, 3990.00);   -- 2 kg de Clavos
+
+-- TABLA MOVIMIENTOS DE INVENTARIO
+CREATE TABLE IF NOT EXISTS movimientos_inventario (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  producto_id INT NOT NULL,
+  stock_anterior INT NOT NULL,
+  stock_nuevo INT NOT NULL,
+  diferencia INT AS (stock_nuevo - stock_anterior) STORED,
+  tipo_operacion ENUM('AJUSTE_MANUAL', 'RESTOCK', 'VENTA', 'MERMA', 'BATCH_UPDATE', 'DEVOLUCION') NOT NULL,
+  motivo TEXT,
+  usuario_id INT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_producto_id (producto_id),
+  INDEX idx_tipo_operacion (tipo_operacion),
+  INDEX idx_fecha (created_at),
+  FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE CASCADE,
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- INSERTAR EJEMPLOS
+INSERT INTO movimientos_inventario (producto_id, stock_anterior, stock_nuevo, tipo_operacion, motivo, usuario_id) VALUES
+(1, 40, 45, 'RESTOCK', 'Recepción de mercadería proveedor Stanley', 1),
+(16, 25, 22, 'VENTA', 'Venta online - pedido #001', 2),
+(31, 150, 156, 'RESTOCK', 'Llegada camión Holcim', 4),
+(66, 2400, 2456, 'RESTOCK', 'Pedido masivo tornillos', 4),
+(52, 80, 78, 'VENTA', 'Venta equipos de seguridad', 2);
