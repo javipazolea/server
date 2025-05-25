@@ -1,8 +1,253 @@
 
 --CREAR BASE
-CREATE DATABASE `ferremas_db`
+CREATE DATABASE 'ferremas_db'
 
 -- CREAR TABLAS DEL NEGOCIO
 
--- INVENTARIO
---USUARIO
+--TABLA PRODUCTOS
+CREATE TABLE IF NOT EXISTS productos (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  sku VARCHAR(20) NOT NULL UNIQUE,
+  descripcion VARCHAR(255) NOT NULL,
+  categoria VARCHAR(100) NOT NULL,
+  subcategoria VARCHAR(100) NOT NULL,
+  precio DECIMAL(10, 2) NOT NULL,
+  unidades INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_sku (sku),
+  INDEX idx_categoria (categoria),
+  INDEX idx_subcategoria (subcategoria)
+);
+
+-- Insertar productos
+INSERT INTO productos (id, sku, descripcion, categoria, subcategoria, precio, unidades) VALUES
+(1, '100001', 'Martillo de Carpintero Stanley 16oz', 'Herramientas Manuales', 'Martillos', 12990.00, 45),
+(2, '100002', 'Martillo de Goma Black & Decker', 'Herramientas Manuales', 'Martillos', 8990.00, 28),
+(3, '100003', 'Martillo de Bola Truper 12oz', 'Herramientas Manuales', 'Martillos', 9990.00, 35),
+(4, '100004', 'Martillo Demoledor Stanley 3lb', 'Herramientas Manuales', 'Martillos', 24990.00, 12),
+(5, '100005', 'Martillo de Uña Dewalt 20oz', 'Herramientas Manuales', 'Martillos', 19990.00, 18),
+(6, '100006', 'Destornillador Phillips Stanley #2', 'Herramientas Manuales', 'Destornilladores', 2990.00, 67),
+(7, '100007', 'Destornillador Plano Bahco 6mm', 'Herramientas Manuales', 'Destornilladores', 3490.00, 42),
+(8, '100008', 'Set Destornilladores Magnéticos Bosch 6pcs', 'Herramientas Manuales', 'Destornilladores', 15990.00, 23),
+(9, '100009', 'Destornillador Eléctrico Black & Decker', 'Herramientas Manuales', 'Destornilladores', 29990.00, 15),
+(10, '100010', 'Destornillador de Precisión Wera 12pcs', 'Herramientas Manuales', 'Destornilladores', 22990.00, 31),
+(11, '100011', 'Llave Inglesa Adjustable Stanley 10"', 'Herramientas Manuales', 'Llaves', 12990.00, 38),
+(12, '100012', 'Set Llaves Combinadas Bahco 8-19mm', 'Herramientas Manuales', 'Llaves', 89990.00, 14),
+(13, '100013', 'Llave de Tubo Gedore 1/2"', 'Herramientas Manuales', 'Llaves', 45990.00, 26),
+(14, '100014', 'Llave Allen Hexagonal Stanley 2.5mm', 'Herramientas Manuales', 'Llaves', 1990.00, 89),
+(15, '100015', 'Set Llaves de Copa Craftsman 40pcs', 'Herramientas Manuales', 'Llaves', 199990.00, 8),
+(16, '200001', 'Taladro Percutor Bosch GSB 13 RE', 'Herramientas Eléctricas', 'Taladros', 89990.00, 22),
+(17, '200002', 'Taladro Inalámbrico Dewalt 20V', 'Herramientas Eléctricas', 'Taladros', 159990.00, 16),
+(18, '200003', 'Taladro de Banco Ryobi 13mm', 'Herramientas Eléctricas', 'Taladros', 249990.00, 9),
+(19, '200004', 'Taladro Atornillador Makita 12V', 'Herramientas Eléctricas', 'Taladros', 79990.00, 33),
+(20, '200005', 'Taladro SDS Plus Hilti TE 2-A', 'Herramientas Eléctricas', 'Taladros', 399990.00, 6),
+(21, '200006', 'Sierra Circular Skil 7 1/4"', 'Herramientas Eléctricas', 'Sierras', 69990.00, 19),
+(22, '200007', 'Sierra de Mesa Dewalt DW745', 'Herramientas Eléctricas', 'Sierras', 349990.00, 7),
+(23, '200008', 'Sierra Caladora Bosch PST 650', 'Herramientas Eléctricas', 'Sierras', 45990.00, 27),
+(24, '200009', 'Sierra Sable Black & Decker RS500', 'Herramientas Eléctricas', 'Sierras', 39990.00, 24),
+(25, '200010', 'Sierra Ingletadora Makita LS1018L', 'Herramientas Eléctricas', 'Sierras', 599990.00, 4),
+(26, '200011', 'Lijadora Orbital Bosch PEX 220 A', 'Herramientas Eléctricas', 'Lijadoras', 59990.00, 29),
+(27, '200012', 'Lijadora de Banda Makita 9403', 'Herramientas Eléctricas', 'Lijadoras', 199990.00, 11),
+(28, '200013', 'Lijadora Delta Black & Decker', 'Herramientas Eléctricas', 'Lijadoras', 34990.00, 36),
+(29, '200014', 'Lijadora Excéntrica Festool ETS 125', 'Herramientas Eléctricas', 'Lijadoras', 289990.00, 5),
+(30, '200015', 'Lijadora de Pared Einhell TC-DW 225', 'Herramientas Eléctricas', 'Lijadoras', 89990.00, 21),
+(31, '300001', 'Cemento Holcim Especial 25kg', 'Materiales de Construcción', 'Materiales Básicos', 4990.00, 156),
+(32, '300002', 'Cemento Polpaico Ultra 25kg', 'Materiales de Construcción', 'Materiales Básicos', 5290.00, 142),
+(33, '300003', 'Cemento Melón Premium 25kg', 'Materiales de Construcción', 'Materiales Básicos', 5490.00, 89),
+(34, '300004', 'Cemento Biocemento 25kg', 'Materiales de Construcción', 'Materiales Básicos', 4790.00, 167),
+(35, '300005', 'Arena Gruesa m³', 'Materiales de Construcción', 'Materiales Básicos', 25990.00, 73),
+(36, '300006', 'Arena Fina m³', 'Materiales de Construcción', 'Materiales Básicos', 28990.00, 58),
+(37, '300007', 'Gravilla 1/2" m³', 'Materiales de Construcción', 'Materiales Básicos', 32990.00, 42),
+(38, '300008', 'Ripio m³', 'Materiales de Construcción', 'Materiales Básicos', 23990.00, 91),
+(39, '300009', 'Ladrillo Príncipe 100 unidades', 'Materiales de Construcción', 'Materiales Básicos', 89990.00, 134),
+(40, '300010', 'Ladrillo Fiscal 100 unidades', 'Materiales de Construcción', 'Materiales Básicos', 79990.00, 178),
+(41, '300011', 'Bloque de Hormigón 20x20x40cm', 'Materiales de Construcción', 'Materiales Básicos', 2990.00, 245),
+(42, '300012', 'Pintura Látex Sherwin Williams Blanco 1gl', 'Materiales de Construcción', 'Acabados', 19990.00, 67),
+(43, '300013', 'Pintura Esmalte Tricolor Negro 1/4gl', 'Materiales de Construcción', 'Acabados', 8990.00, 83),
+(44, '300014', 'Pintura Fachada Ceresita 15lt', 'Materiales de Construcción', 'Acabados', 45990.00, 29),
+(45, '300015', 'Pintura Anticorrosiva Rust Mort 1lt', 'Materiales de Construcción', 'Acabados', 12990.00, 46),
+(46, '300016', 'Barniz Marino Cristal 1/4gl', 'Materiales de Construcción', 'Acabados', 14990.00, 34),
+(47, '300017', 'Barniz Poliuretano Mate 1lt', 'Materiales de Construcción', 'Acabados', 18990.00, 52),
+(48, '300018', 'Sellador Madera Cetol 1lt', 'Materiales de Construcción', 'Acabados', 22990.00, 38),
+(49, '300019', 'Cerámico Piso San Lorenzo 60x60cm', 'Materiales de Construcción', 'Acabados', 12990.00, 95),
+(50, '300020', 'Cerámico Mural Cordillera 25x40cm', 'Materiales de Construcción', 'Acabados', 8990.00, 112),
+(51, '300021', 'Porcelanato Ilva 60x60cm Rectificado', 'Materiales de Construcción', 'Acabados', 24990.00, 67),
+(52, '400001', 'Casco de Seguridad 3M H-701R', 'Equipos de Seguridad', 'Cascos', 15990.00, 78),
+(53, '400002', 'Casco MSA V-Gard con Barbiquejo', 'Equipos de Seguridad', 'Cascos', 22990.00, 45),
+(54, '400003', 'Casco Ventilado Honeywell North', 'Equipos de Seguridad', 'Cascos', 18990.00, 62),
+(55, '400004', 'Guantes Nitrilo Ansell Hyflex', 'Equipos de Seguridad', 'Guantes', 8990.00, 134),
+(56, '400005', 'Guantes Cuero Vacuno Reforzados', 'Equipos de Seguridad', 'Guantes', 12990.00, 89),
+(57, '400006', 'Guantes Dieléctricos Clase 2', 'Equipos de Seguridad', 'Guantes', 45990.00, 23),
+(58, '400007', 'Guantes Anticorte Nivel 5', 'Equipos de Seguridad', 'Guantes', 19990.00, 56),
+(59, '400008', 'Lentes de Seguridad 3M Virtua', 'Equipos de Seguridad', 'Lentes de Seguridad', 7990.00, 167),
+(60, '400009', 'Lentes Graduados Uvex Skyper', 'Equipos de Seguridad', 'Lentes de Seguridad', 24990.00, 34),
+(61, '400010', 'Lentes Soldadura Din 11', 'Equipos de Seguridad', 'Lentes de Seguridad', 15990.00, 47),
+(62, '400011', 'Máscara Respirador 3M 6200', 'Equipos de Seguridad', 'Accesorios Varios', 35990.00, 28),
+(63, '400012', 'Chaleco Reflectante Clase 2', 'Equipos de Seguridad', 'Accesorios Varios', 8990.00, 145),
+(64, '400013', 'Arnés de Seguridad 3 Puntos', 'Equipos de Seguridad', 'Accesorios Varios', 45990.00, 19),
+(65, '400014', 'Zapatos de Seguridad Bata Industrial', 'Equipos de Seguridad', 'Accesorios Varios', 39990.00, 72),
+(66, '500001', 'Tornillo Autoperforante 8x1 1/2"', 'Tornillos y Anclajes', 'Tornillos para Metal', 290.00, 2456),
+(67, '500002', 'Tornillo Madera 6x40mm Cabeza Plana', 'Tornillos y Anclajes', 'Tornillos para Madera', 180.00, 3789),
+(68, '500003', 'Tornillo Concreto 8x80mm Hexagonal', 'Tornillos y Anclajes', 'Tornillos para Concreto', 890.00, 1245),
+(69, '500004', 'Tornillo Inoxidable 6x25mm Phillips', 'Tornillos y Anclajes', 'Tornillos Inoxidables', 420.00, 1876),
+(70, '500005', 'Tirafondo 1/4"x3" Galvanizado', 'Tornillos y Anclajes', 'Tirafondos', 590.00, 967),
+(71, '500006', 'Anclaje Expansivo Hilti 10x80mm', 'Tornillos y Anclajes', 'Anclajes Expansivos', 2990.00, 89),
+(72, '500007', 'Anclaje Químico Sika AnchorFix 300ml', 'Tornillos y Anclajes', 'Anclajes Químicos', 15990.00, 34),
+(73, '500008', 'Taco Fischer SX 8x40mm', 'Tornillos y Anclajes', 'Tacos y Tarugos', 590.00, 1567),
+(74, '500009', 'Clavo Común 2 1/2" kg', 'Tornillos y Anclajes', 'Clavos', 3990.00, 234),
+(75, '500010', 'Perno Roscado 1/2"x6" Galvanizado', 'Tornillos y Anclajes', 'Pernos', 1990.00, 456),
+(76, '600001', 'Adhesivo Epóxico Loctite 5 Minutos', 'Fijaciones y Adhesivos', 'Adhesivos Epóxicos', 8990.00, 67),
+(77, '600002', 'Silicona Estructural Dow Corning', 'Fijaciones y Adhesivos', 'Siliconas', 12990.00, 45),
+(78, '600003', 'Pegamento PVC Tigre 175ml', 'Fijaciones y Adhesivos', 'Pegamentos PVC', 4990.00, 123),
+(79, '600004', 'Sellador Poliuretano Sikaflex 1A', 'Fijaciones y Adhesivos', 'Selladores', 8990.00, 78),
+(80, '600005', 'Espuma Expansiva Sika Boom 750ml', 'Fijaciones y Adhesivos', 'Espumas', 6990.00, 92),
+(81, '600006', 'Cinta Doble Contacto 3M 19mm', 'Fijaciones y Adhesivos', 'Cintas Adhesivas', 3990.00, 234),
+(82, '600007', 'Masilla Plástica Bondo 453gr', 'Fijaciones y Adhesivos', 'Masillas', 14990.00, 56),
+(83, '600008', 'Adhesivo Instantáneo Super Glue 20gr', 'Fijaciones y Adhesivos', 'Adhesivos Instantáneos', 2990.00, 189),
+(84, '600009', 'Soldadura Fría JB Weld 56gr', 'Fijaciones y Adhesivos', 'Soldaduras Frías', 9990.00, 43),
+(85, '600010', 'Pegamento Contacto Agorex 1lt', 'Fijaciones y Adhesivos', 'Pegamentos Contacto', 18990.00, 67),
+(86, '700001', 'Flexómetro Stanley 5m FatMax', 'Equipos de Medición', 'Cintas Métricas', 7990.00, 145),
+(87, '700002', 'Flexómetro Profesional Stabila 8m', 'Equipos de Medición', 'Cintas Métricas', 18990.00, 67),
+(88, '700003', 'Cinta Métrica Lufkin 30m', 'Equipos de Medición', 'Cintas Métricas', 45990.00, 23),
+(89, '700004', 'Nivel de Burbuja Stanley 60cm', 'Equipos de Medición', 'Niveles', 12990.00, 89),
+(90, '700005', 'Nivel Láser Bosch GLL 3-80', 'Equipos de Medición', 'Niveles', 299990.00, 12),
+(91, '700006', 'Nivel Magnético Stabila 40cm', 'Equipos de Medición', 'Niveles', 35990.00, 34),
+(92, '700007', 'Escuadra Carpintero Stanley 30cm', 'Equipos de Medición', 'Escuadras', 8990.00, 78),
+(93, '700008', 'Calibrador Vernier Mitutoyo 150mm', 'Equipos de Medición', 'Calibradores', 89990.00, 19),
+(94, '700009', 'Medidor Láser Distancia Bosch GLM 50', 'Equipos de Medición', 'Medidores Láser', 149990.00, 26),
+(95, '700010', 'Plomada de Bronce 500gr', 'Equipos de Medición', 'Plomadas', 12990.00, 45),
+(96, '700011', 'Transportador Ángulos Stanley', 'Equipos de Medición', 'Transportadores', 15990.00, 52),
+(97, '700012', 'Regla Metálica 100cm Graduada', 'Equipos de Medición', 'Reglas', 19990.00, 67),
+(98, '700013', 'Compás de Puntas Stanley', 'Equipos de Medición', 'Compases', 22990.00, 38),
+(99, '700014', 'Micrómetro Starrett 0-25mm', 'Equipos de Medición', 'Micrómetros', 199990.00, 14),
+(100, '700015', 'Goniómetro Digital Wixey WR300', 'Equipos de Medición', 'Goniómetros', 79990.00, 27);
+
+--TABLA CATEGORIAS
+
+CREATE TABLE IF NOT EXISTS categories (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  description TEXT,
+  parent_id INT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_parent_id (parent_id),
+  INDEX idx_name (name),
+  FOREIGN KEY (parent_id) REFERENCES categories(id) ON DELETE CASCADE
+);
+
+-- categorías principales y subcategorías
+INSERT INTO categories (id, name, description, parent_id) VALUES
+(1, 'Herramientas Manuales', 'Herramientas que no requieren electricidad', NULL),
+(2, 'Herramientas Eléctricas', 'Herramientas que funcionan con electricidad', NULL),
+(3, 'Materiales de Construcción', 'Materiales básicos para construcción', NULL),
+(4, 'Equipos de Seguridad', 'Implementos para seguridad en el trabajo', NULL),
+(5, 'Tornillos y Anclajes', 'Todo tipo de fijaciones', NULL),
+(6, 'Fijaciones y Adhesivos', 'Pegamentos y adhesivos varios', NULL),
+(7, 'Equipos de Medición', 'Instrumentos de medición', NULL),
+-- Subcategorías de Herramientas Manuales
+(8, 'Martillos', 'Martillos de diferentes tipos', 1),
+(9, 'Destornilladores', 'Destornilladores manuales y eléctricos', 1),
+(10, 'Llaves', 'Llaves de diferentes tipos', 1),
+-- Subcategorías de Herramientas Eléctricas
+(11, 'Taladros', 'Taladros percutores e inalámbricos', 2),
+(12, 'Sierras', 'Sierras circulares, caladoras y de mesa', 2),
+(13, 'Lijadoras', 'Lijadoras orbitales y de banda', 2),
+-- Subcategorías de Materiales de Construcción
+(14, 'Materiales Básicos', 'Cemento, arena, ladrillos, etc.', 3),
+(15, 'Acabados', 'Pinturas, barnices, cerámicos, etc.', 3),
+-- Subcategorías de Equipos de Seguridad
+(16, 'Cascos', 'Cascos de seguridad', 4),
+(17, 'Guantes', 'Guantes de protección', 4),
+(18, 'Lentes de Seguridad', 'Lentes y gafas protectoras', 4),
+(19, 'Accesorios Varios', 'Otros elementos de seguridad', 4),
+-- Subcategorías de Tornillos y Anclajes
+(20, 'Tornillos para Metal', 'Tornillos autoperforantes', 5),
+(21, 'Tornillos para Madera', 'Tornillos para madera', 5),
+(22, 'Tornillos para Concreto', 'Tornillos para concreto', 5),
+(23, 'Tornillos Inoxidables', 'Tornillos de acero inoxidable', 5),
+(24, 'Tirafondos', 'Tirafondos galvanizados', 5),
+(25, 'Anclajes Expansivos', 'Anclajes expansivos', 5),
+(26, 'Anclajes Químicos', 'Anclajes químicos', 5),
+(27, 'Tacos y Tarugos', 'Tacos fischer y tarugos', 5),
+(28, 'Clavos', 'Clavos comunes y especiales', 5),
+(29, 'Pernos', 'Pernos roscados', 5),
+-- Subcategorías de Fijaciones y Adhesivos
+(30, 'Adhesivos Epóxicos', 'Adhesivos epóxicos', 6),
+(31, 'Siliconas', 'Siliconas estructurales', 6),
+(32, 'Pegamentos PVC', 'Pegamentos para PVC', 6),
+(33, 'Selladores', 'Selladores de poliuretano', 6),
+(34, 'Espumas', 'Espumas expansivas', 6),
+(35, 'Cintas Adhesivas', 'Cintas de doble contacto', 6),
+(36, 'Masillas', 'Masillas plásticas', 6),
+(37, 'Adhesivos Instantáneos', 'Super glue y similares', 6),
+(38, 'Soldaduras Frías', 'Soldaduras en frío', 6),
+(39, 'Pegamentos Contacto', 'Pegamentos de contacto', 6),
+-- Subcategorías de Equipos de Medición
+(40, 'Cintas Métricas', 'Flexómetros y cintas métricas', 7),
+(41, 'Niveles', 'Niveles de burbuja y láser', 7),
+(42, 'Escuadras', 'Escuadras de carpintero', 7),
+(43, 'Calibradores', 'Calibradores vernier', 7),
+(44, 'Medidores Láser', 'Medidores láser de distancia', 7),
+(45, 'Plomadas', 'Plomadas de bronce', 7),
+(46, 'Transportadores', 'Transportadores de ángulos', 7),
+(47, 'Reglas', 'Reglas metálicas graduadas', 7),
+(48, 'Compases', 'Compases de puntas', 7),
+(49, 'Micrómetros', 'Micrómetros de precisión', 7),
+(50, 'Goniómetros', 'Goniómetros digitales', 7);
+
+-- Crear tabla de usuarios (empleados del sistema)
+CREATE TABLE IF NOT EXISTS usuarios (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(100) NOT NULL,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  rol ENUM('administrador', 'vendedor', 'bodeguero', 'contador') NOT NULL,
+  activo BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_email (email),
+  INDEX idx_rol (rol)
+) ;
+
+-- Crear tabla de clientes
+CREATE TABLE IF NOT EXISTS clientes (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  rut VARCHAR(12) NOT NULL UNIQUE,
+  nombre VARCHAR(100) NOT NULL,
+  apellido VARCHAR(100) NOT NULL,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  telefono VARCHAR(20),
+  direccion VARCHAR(255),
+  ciudad VARCHAR(50),
+  region VARCHAR(50),
+  activo BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_rut (rut),
+  INDEX idx_email (email),
+  INDEX idx_nombre (nombre, apellido)
+);
+
+-- Insertar usuarios del sistema
+INSERT INTO usuarios (nombre, email, password, rol) VALUES
+('Juan Pérez', 'admin@ferremas.cl', '$2b$10$XtUuiA1VE5LKE88FZ5U2qOrpBqRKr7R3VqVDu3cVyC1Kb1/xHPKDa', 'administrador'),
+('María González', 'vendedor1@ferremas.cl', '$2b$10$XtUuiA1VE5LKE88FZ5U2qOrpBqRKr7R3VqVDu3cVyC1Kb1/xHPKDa', 'vendedor'),
+('Carlos Silva', 'vendedor2@ferremas.cl', '$2b$10$XtUuiA1VE5LKE88FZ5U2qOrpBqRKr7R3VqVDu3cVyC1Kb1/xHPKDa', 'vendedor'),
+('Ana Morales', 'bodeguero1@ferremas.cl', '$2b$10$XtUuiA1VE5LKE88FZ5U2qOrpBqRKr7R3VqVDu3cVyC1Kb1/xHPKDa', 'bodeguero'),
+('Luis Rojas', 'bodeguero2@ferremas.cl', '$2b$10$XtUuiA1VE5LKE88FZ5U2qOrpBqRKr7R3VqVDu3cVyC1Kb1/xHPKDa', 'bodeguero'),
+('Patricia Castro', 'contador@ferremas.cl', '$2b$10$XtUuiA1VE5LKE88FZ5U2qOrpBqRKr7R3VqVDu3cVyC1Kb1/xHPKDa', 'contador');
+
+-- Insertar clientes
+INSERT INTO clientes (rut, nombre, apellido, email, telefono, direccion, ciudad, region) VALUES
+('12345678-9', 'Pedro', 'Martínez', 'pedro.martinez@email.com', '+56912345678', 'Av. Providencia 1234', 'Santiago', 'Metropolitana'),
+('23456789-0', 'Carmen', 'López', 'carmen.lopez@email.com', '+56923456789', 'Santa Rosa 567', 'Santiago', 'Metropolitana'),
+('34567890-1', 'Roberto', 'Hernández', 'roberto.hernandez@email.com', '+56934567890', 'Las Condes 890', 'Santiago', 'Metropolitana'),
+('45678901-2', 'Elena', 'Vargas', 'elena.vargas@email.com', '+56945678901', 'Maipú 123', 'Santiago', 'Metropolitana'),
+('56789012-3', 'Miguel', 'Torres', 'miguel.torres@email.com', '+56956789012', 'O\'Higgins 456', 'Viña del Mar', 'Valparaíso'),
+('67890123-4', 'Claudia', 'Ramírez', 'claudia.ramirez@email.com', '+56967890123', 'Barros Arana 789', 'Concepción', 'Biobío'),
+('78901234-5', 'Fernando', 'Díaz', 'fernando.diaz@email.com', '+56978901234', 'Manuel Montt 321', 'Temuco', 'Araucanía'),
+('89012345-6', 'Sofía', 'Mendoza', 'sofia.mendoza@email.com', '+56989012345', 'Baquedano 654', 'Antofagasta', 'Antofagasta'),
+('90123456-7', 'Andrés', 'Fuentes', 'andres.fuentes@email.com', '+56990123456', 'Independencia 987', 'La Serena', 'Coquimbo'),
+('01234567-8', 'Valentina', 'Soto', 'valentina.soto@email.com', '+56901234567', 'Arturo Prat 246', 'Puerto Montt', 'Los Lagos');
