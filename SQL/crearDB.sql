@@ -251,3 +251,32 @@ INSERT INTO clientes (rut, nombre, apellido, email, telefono, direccion, ciudad,
 ('89012345-6', 'Sofía', 'Mendoza', 'sofia.mendoza@email.com', '+56989012345', 'Baquedano 654', 'Antofagasta', 'Antofagasta'),
 ('90123456-7', 'Andrés', 'Fuentes', 'andres.fuentes@email.com', '+56990123456', 'Independencia 987', 'La Serena', 'Coquimbo'),
 ('01234567-8', 'Valentina', 'Soto', 'valentina.soto@email.com', '+56901234567', 'Arturo Prat 246', 'Puerto Montt', 'Los Lagos');
+
+-- Crear tabla de sucursales
+CREATE TABLE IF NOT EXISTS sucursales (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(100) NOT NULL,
+  direccion VARCHAR(255) NOT NULL,
+  comuna VARCHAR(50) NOT NULL,
+  telefono VARCHAR(20),
+  email VARCHAR(100),
+  horario_atencion VARCHAR(100),
+  activa BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_comuna (comuna),
+  INDEX idx_nombre (nombre)
+);
+
+-- Insertar sucursales en Santiago, Chile
+INSERT INTO sucursales (nombre, direccion, comuna, telefono, email, horario_atencion) VALUES
+('FERREMAS Central', 'Av. Providencia 1234', 'Providencia', '+56225551001', 'central@ferremas.cl', 'Lunes a Viernes 8:00-18:00, Sábados 9:00-14:00'),
+('FERREMAS Las Condes', 'Av. Apoquindo 4500', 'Las Condes', '+56225551002', 'lascondes@ferremas.cl', 'Lunes a Viernes 8:30-18:30, Sábados 9:00-15:00'),
+('FERREMAS Maipú', 'Av. Pajaritos 1850', 'Maipú', '+56225551003', 'maipu@ferremas.cl', 'Lunes a Viernes 8:00-18:00, Sábados 8:30-14:30'),
+('FERREMAS San Miguel', 'Gran Avenida 3200', 'San Miguel', '+56225551004', 'sanmiguel@ferremas.cl', 'Lunes a Viernes 8:00-18:00, Sábados 9:00-14:00'),
+('FERREMAS Ñuñoa', 'Av. Irarrázaval 2890', 'Ñuñoa', '+56225551005', 'nunoa@ferremas.cl', 'Lunes a Viernes 8:30-18:30, Sábados 9:00-15:00'),
+('FERREMAS La Florida', 'Av. Vicuña Mackenna 6754', 'La Florida', '+56225551006', 'laflorida@ferremas.cl', 'Lunes a Viernes 8:00-18:00, Sábados 8:30-14:30'),
+('FERREMAS Independencia', 'Av. Independencia 1456', 'Independencia', '+56225551007', 'independencia@ferremas.cl', 'Lunes a Viernes 8:00-18:00, Sábados 9:00-14:00'),
+('FERREMAS Puente Alto', 'Av. Concha y Toro 1789', 'Puente Alto', '+56225551008', 'puentealto@ferremas.cl', 'Lunes a Viernes 8:30-18:30, Sábados 9:00-15:00'),
+('FERREMAS Quilicura', 'Av. Matta 2345', 'Quilicura', '+56225551009', 'quilicura@ferremas.cl', 'Lunes a Viernes 8:00-18:00, Sábados 8:30-14:30'),
+('FERREMAS Santiago Centro', 'Alameda 1567', 'Santiago', '+56225551010', 'centro@ferremas.cl', 'Lunes a Viernes 8:00-19:00, Sábados 9:00-16:00');
