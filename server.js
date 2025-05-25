@@ -22,6 +22,12 @@ const addItemRoutes = require('./routes/carrito/addItem');
 const updateItemRoutes = require('./routes/carrito/updateItem');
 const deleteItemRoutes = require('./routes/carrito/deleteItem');
 
+// Importar rutas de inventario
+const getInventoryRoutes = require('./routes/inventario/getInventory');
+const updateInventoryRoutes = require('./routes/inventario/updateInventory'); 
+const batchInventoryRoutes = require('./routes/inventario/batchInventory');
+
+
 // Crear app de Express
 const app = express();
 
@@ -54,6 +60,10 @@ app.use('/api/cart', updateItemRoutes);
 app.use('/api/cart', addItemRoutes);
 app.use('/api/cart', cartRoutes);
 
+// Rutas de inventario
+app.use('/api/inventory', batchInventoryRoutes);
+app.use('/api/inventory', updateInventoryRoutes);
+app.use('/api/inventory', getInventoryRoutes);
 
 // Puerto
 const PORT = 3001;
