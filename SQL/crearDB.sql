@@ -491,3 +491,346 @@ INSERT INTO webpay_log (pago_id, operacion, request_data, response_data, codigo_
 --Expandir la columna operacion tabla pagos
 ALTER TABLE ferremas_db.webpay_log 
 MODIFY COLUMN operacion VARCHAR(50) NOT NULL;
+
+-- Mejoras para la tabla webpay_log
+ALTER TABLE ferremas_db.webpay_log 
+MODIFY COLUMN operacion VARCHAR(50) NOT NULL;
+
+ALTER TABLE ferremas_db.webpay_log 
+MODIFY COLUMN request_data TEXT;
+
+ALTER TABLE ferremas_db.webpay_log 
+MODIFY COLUMN response_data TEXT;
+
+ALTER TABLE ferremas_db.webpay_log 
+MODIFY COLUMN mensaje_respuesta VARCHAR(500);
+
+-- Asegurar que transaction_date tenga el tipo correcto
+ALTER TABLE ferremas_db.pagos 
+MODIFY COLUMN transaction_date DATETIME NULL;
+
+-- Agregar índices para mejorar rendimiento
+CREATE INDEX idx_pagos_token_webpay ON ferremas_db.pagos(token_webpay);
+CREATE INDEX idx_pagos_orden_compra ON ferremas_db.pagos(orden_compra);
+CREATE INDEX idx_pagos_estado ON ferremas_db.pagos(estado);
+CREATE INDEX idx_webpay_log_pago_id ON ferremas_db.webpay_log(pago_id);
+
+-- Agregar más estados posibles a los pagos
+ALTER TABLE ferremas_db.pagos 
+MODIFY COLUMN estado ENUM('pendiente', 'procesando', 'aprobado', 'rechazado', 'cancelado', 'expirado', 'error') 
+DEFAULT 'pendiente';
+
+-- Verificar estructura actualizada
+DESCRIBE ferremas_db.pagos;
+DESCRIBE ferremas_db.webpay_log;
+
+--divisas
+-- Script SQL para crear tablas del sistema de divisas
+-- Base: ferremas_db
+
+USE ferremas_db;
+
+-- TABLA 1: currency_rates - Caché de tipos de cambio
+CREATE TABLE IF NOT EXISTS currency_rates (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  currency VARCHAR(10) NOT NULL,
+  exchange_rate DECIMAL(15, 6) NOT NULL,
+  rate_date DATE NOT NULL,
+  source ENUM('BCCH_API', 'MANUAL', 'CACHE') DEFAULT 'BCCH_API',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  
+  -- Índices para optimizar consultas
+  INDEX idx_currency_date (currency, rate_date),
+  INDEX idx_updated_at (updated_at),
+  INDEX idx_source (source),
+  
+  -- Clave única para evitar duplicados
+  UNIQUE KEY unique_currency_date (currency, rate_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- TABLA 2: currency_conversions - Registro de conversiones realizadas
+CREATE TABLE IF NOT EXISTS currency_conversions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  amount DECIMAL(15, 6) NOT NULL,
+  from_currency VARCHAR(10) NOT NULL,
+  to_currency VARCHAR(10) NOT NULL,
+  exchange_rate DECIMAL(15, 6) NOT NULL,
+  converted_amount DECIMAL(15, 6) NOT NULL,
+  conversion_date DATE NOT NULL,
+  user_session VARCHAR(255) NULL,
+  ip_address VARCHAR(45) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  
+  -- Índices para consultas frecuentes
+  INDEX idx_currencies (from_currency, to_currency),
+  INDEX idx_conversion_date (conversion_date),
+  INDEX idx_created_at (created_at),
+  INDEX idx_user_session (user_session)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- TABLA 3: currency_config - Configuración de monedas soportadas
+CREATE TABLE IF NOT EXISTS currency_config (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  currency_code VARCHAR(10) NOT NULL UNIQUE,
+  currency_name VARCHAR(100) NOT NULL,
+  currency_symbol VARCHAR(10) DEFAULT '',
+  bcch_series_code VARCHAR(50) NULL,
+  is_active BOOLEAN DEFAULT TRUE,
+  decimal_places INT DEFAULT 2,
+  update_frequency ENUM('DAILY', 'HOURLY', 'MANUAL') DEFAULT 'DAILY',
+  display_order INT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  
+  INDEX idx_currency_code (currency_code),
+  INDEX idx_is_active (is_active),
+  INDEX idx_display_order (display_order)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- TABLA 4: currency_alerts - Alertas de cambios significativos
+CREATE TABLE IF NOT EXISTS currency_alerts (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  currency VARCHAR(10) NOT NULL,
+  previous_rate DECIMAL(15, 6) NOT NULL,
+  current_rate DECIMAL(15, 6) NOT NULL,
+  change_percentage DECIMAL(8, 4) NOT NULL,
+  threshold_percentage DECIMAL(8, 4) NOT NULL,
+  alert_type ENUM('INCREASE', 'DECREASE', 'VOLATILITY') NOT NULL,
+  is_processed BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  
+  INDEX idx_currency (currency),
+  INDEX idx_is_processed (is_processed),
+  INDEX idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- INSERTAR CONFIGURACIÓN INICIAL DE MONEDAS
+INSERT INTO currency_config (currency_code, currency_name, currency_symbol, bcch_series_code, is_active, decimal_places, display_order) VALUES
+('CLP', 'Peso Chileno', '', NULL, TRUE, 0, 1),
+('USD', 'Dólar Estadounidense', 'US$', 'F073.TCO.PRE.Z.D', TRUE, 2, 2),
+('EUR', 'Euro', '€', 'F072.CLP.EUR.N.O.D', TRUE, 2, 3),
+('UF', 'Unidad de Fomento', 'UF', 'F073.UF.CLP.Z.D', TRUE, 2, 4),
+('UTM', 'Unidad Tributaria Mensual', 'UTM', 'F073.UTM.CLP.Z.D', TRUE, 0, 5),
+('GBP', 'Libra Esterlina', '£', 'F072.CLP.GBP.N.O.D', FALSE, 2, 6),
+('JPY', 'Yen Japonés', '¥', 'F072.CLP.JPY.N.O.D', FALSE, 0, 7);
+
+
+-- INSERTAR ALGUNOS DATOS DE EJEMPLO (valores aproximados para testing)
+-- Estos se reemplazarán por datos reales de la API
+INSERT INTO currency_rates (currency, exchange_rate, rate_date, source) VALUES
+('USD', 941.20, CURDATE(), 'BCCH_API'),
+('EUR', 1042.42, CURDATE(), 'BCCH_API'),
+('UF', 39144.01, CURDATE(), 'BCCH_API'),
+('UTM', 68648.00, CURDATE(), 'BCCH_API');
+
+-- INSERTAR ALGUNOS EJEMPLOS DE CONVERSIONES
+INSERT INTO currency_conversions (amount, from_currency, to_currency, exchange_rate, converted_amount, conversion_date) VALUES
+(100.00, 'USD', 'CLP', 941.20, 94120.00, CURDATE()),
+(50000.00, 'CLP', 'USD', 0.00106, 53.06, CURDATE()),
+(1.00, 'UF', 'CLP', 39144.01, 39144.01, CURDATE()),
+(1000000.00, 'CLP', 'EUR', 0.00096, 958.97, CURDATE());
+
+-- PROCEDIMIENTO ALMACENADO: Limpiar datos antiguos
+DELIMITER //
+CREATE PROCEDURE CleanOldCurrencyData()
+BEGIN
+    -- Limpiar conversiones más antiguas de 90 días
+    DELETE FROM currency_conversions 
+    WHERE created_at < DATE_SUB(NOW(), INTERVAL 90 DAY);
+    
+    -- Limpiar rates más antiguos de 30 días (excepto los del último día de cada mes)
+    DELETE cr1 FROM currency_rates cr1
+    WHERE cr1.created_at < DATE_SUB(NOW(), INTERVAL 30 DAY)
+    AND NOT EXISTS (
+        SELECT 1 FROM currency_rates cr2 
+        WHERE cr2.currency = cr1.currency 
+        AND LAST_DAY(cr2.rate_date) = cr2.rate_date
+        AND cr2.id = cr1.id
+    );
+    
+    -- Limpiar alertas procesadas más antiguas de 7 días
+    DELETE FROM currency_alerts 
+    WHERE is_processed = TRUE 
+    AND created_at < DATE_SUB(NOW(), INTERVAL 7 DAY);
+    
+    SELECT 'Limpieza de datos completada' as mensaje;
+END //
+DELIMITER ;
+
+-- FUNCIÓN: Obtener tasa de cambio más reciente
+DELIMITER //
+CREATE FUNCTION GetLatestExchangeRate(p_currency VARCHAR(10))
+RETURNS DECIMAL(15,6)
+READS SQL DATA
+DETERMINISTIC
+BEGIN
+    DECLARE v_rate DECIMAL(15,6) DEFAULT 1.0;
+    
+    -- Si es CLP, retornar 1
+    IF p_currency = 'CLP' THEN
+        RETURN 1.0;
+    END IF;
+    
+    -- Obtener el rate más reciente
+    SELECT exchange_rate INTO v_rate
+    FROM currency_rates 
+    WHERE currency = p_currency 
+    AND rate_date <= CURDATE()
+    ORDER BY rate_date DESC, updated_at DESC 
+    LIMIT 1;
+    
+    RETURN IFNULL(v_rate, 0.0);
+END //
+DELIMITER ;
+
+-- FUNCIÓN: Convertir monto entre monedas
+DELIMITER //
+CREATE FUNCTION ConvertCurrency(p_amount DECIMAL(15,6), p_from_currency VARCHAR(10), p_to_currency VARCHAR(10))
+RETURNS DECIMAL(15,6)
+READS SQL DATA
+DETERMINISTIC
+BEGIN
+    DECLARE v_from_rate DECIMAL(15,6);
+    DECLARE v_to_rate DECIMAL(15,6);
+    DECLARE v_amount_in_clp DECIMAL(15,6);
+    DECLARE v_converted_amount DECIMAL(15,6);
+    
+    -- Si es la misma moneda, retornar el mismo monto
+    IF p_from_currency = p_to_currency THEN
+        RETURN p_amount;
+    END IF;
+    
+    -- Obtener rates
+    SET v_from_rate = GetLatestExchangeRate(p_from_currency);
+    SET v_to_rate = GetLatestExchangeRate(p_to_currency);
+    
+    -- Convertir a CLP primero
+    IF p_from_currency = 'CLP' THEN
+        SET v_amount_in_clp = p_amount;
+    ELSE
+        SET v_amount_in_clp = p_amount * v_from_rate;
+    END IF;
+    
+    -- Convertir de CLP a moneda destino
+    IF p_to_currency = 'CLP' THEN
+        SET v_converted_amount = v_amount_in_clp;
+    ELSE
+        SET v_converted_amount = v_amount_in_clp / v_to_rate;
+    END IF;
+    
+    RETURN v_converted_amount;
+END //
+DELIMITER ;
+
+-- TRIGGER: Crear alerta cuando hay cambio significativo
+DELIMITER //
+CREATE TRIGGER currency_rate_change_alert
+    AFTER INSERT ON currency_rates
+    FOR EACH ROW
+BEGIN
+    DECLARE v_previous_rate DECIMAL(15,6);
+    DECLARE v_change_percentage DECIMAL(8,4);
+    DECLARE v_threshold DECIMAL(8,4) DEFAULT 5.0; -- 5% threshold
+    
+    -- Obtener rate anterior
+    SELECT exchange_rate INTO v_previous_rate
+    FROM currency_rates 
+    WHERE currency = NEW.currency 
+    AND rate_date < NEW.rate_date
+    ORDER BY rate_date DESC, updated_at DESC 
+    LIMIT 1;
+    
+    -- Si hay rate anterior, calcular cambio
+    IF v_previous_rate IS NOT NULL AND v_previous_rate > 0 THEN
+        SET v_change_percentage = ((NEW.exchange_rate - v_previous_rate) / v_previous_rate) * 100;
+        
+        -- Si el cambio supera el threshold, crear alerta
+        IF ABS(v_change_percentage) >= v_threshold THEN
+            INSERT INTO currency_alerts (
+                currency, 
+                previous_rate, 
+                current_rate, 
+                change_percentage, 
+                threshold_percentage,
+                alert_type
+            ) VALUES (
+                NEW.currency,
+                v_previous_rate,
+                NEW.exchange_rate,
+                v_change_percentage,
+                v_threshold,
+                CASE 
+                    WHEN v_change_percentage > 0 THEN 'INCREASE'
+                    ELSE 'DECREASE'
+                END
+            );
+        END IF;
+    END IF;
+END //
+DELIMITER ;
+
+-- VISTA: Resumen de tipos de cambio actuales
+CREATE OR REPLACE VIEW current_exchange_rates AS
+SELECT 
+    cc.currency_code,
+    cc.currency_name,
+    cc.currency_symbol,
+    cr.exchange_rate,
+    cr.rate_date,
+    cr.updated_at,
+    cc.decimal_places,
+    CASE 
+        WHEN cr.updated_at > DATE_SUB(NOW(), INTERVAL 4 HOUR) THEN 'CURRENT'
+        WHEN cr.updated_at > DATE_SUB(NOW(), INTERVAL 1 DAY) THEN 'RECENT'
+        ELSE 'OUTDATED'
+    END as freshness_status
+FROM currency_config cc
+LEFT JOIN currency_rates cr ON cc.currency_code = cr.currency
+LEFT JOIN (
+    -- Subconsulta para obtener el rate más reciente de cada moneda
+    SELECT currency, MAX(rate_date) as max_date, MAX(updated_at) as max_updated
+    FROM currency_rates 
+    GROUP BY currency
+) latest ON cr.currency = latest.currency 
+    AND cr.rate_date = latest.max_date 
+    AND cr.updated_at = latest.max_updated
+WHERE cc.is_active = TRUE
+ORDER BY cc.display_order;
+
+-- VISTA: Estadísticas de conversiones
+CREATE OR REPLACE VIEW conversion_statistics AS
+SELECT 
+    from_currency,
+    to_currency,
+    COUNT(*) as total_conversions,
+    SUM(amount) as total_amount_converted,
+    AVG(exchange_rate) as avg_exchange_rate,
+    MIN(conversion_date) as first_conversion,
+    MAX(conversion_date) as last_conversion,
+    DATE(created_at) as conversion_day,
+    COUNT(DISTINCT user_session) as unique_users
+FROM currency_conversions
+WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+GROUP BY from_currency, to_currency, DATE(created_at)
+ORDER BY conversion_day DESC, total_conversions DESC;
+
+-- Índices adicionales para optimización
+CREATE INDEX idx_currency_rates_lookup ON currency_rates(currency, rate_date DESC, updated_at DESC);
+CREATE INDEX idx_conversions_stats ON currency_conversions(created_at, from_currency, to_currency);
+
+-- Comentarios para documentación
+ALTER TABLE currency_rates COMMENT = 'Caché de tipos de cambio obtenidos de la API del Banco Central';
+ALTER TABLE currency_conversions COMMENT = 'Registro histórico de todas las conversiones realizadas';
+ALTER TABLE currency_config COMMENT = 'Configuración de monedas soportadas por el sistema';
+ALTER TABLE currency_alerts COMMENT = 'Alertas automáticas por cambios significativos en tipos de cambio';
+
+-- Verificar que las tablas se crearon correctamente
+SELECT 
+    TABLE_NAME,
+    TABLE_COMMENT,
+    CREATE_TIME
+FROM INFORMATION_SCHEMA.TABLES 
+WHERE TABLE_SCHEMA = 'ferremas_db' 
+AND TABLE_NAME LIKE 'currency_%'
+ORDER BY TABLE_NAME;
