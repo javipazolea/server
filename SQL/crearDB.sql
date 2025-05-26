@@ -487,3 +487,7 @@ INSERT INTO webpay_log (pago_id, operacion, request_data, response_data, codigo_
 (1, 'confirmar_transaccion', '{"token": "01ab23cd45ef67890"}', '{"response_code": 0, "authorization_code": "1234567890"}', '0', 'Transacción aprobada', TRUE),
 (2, 'crear_transaccion', '{"amount": 74950, "buy_order": "ORD-2024-002"}', '{"token": "02bc34de56fg78901", "url": "https://webpay3gint.transbank.cl/webpayserver/initTransaction"}', '0', 'Transacción creada exitosamente', TRUE),
 (2, 'confirmar_transaccion', '{"token": "02bc34de56fg78901"}', '{"response_code": 0, "authorization_code": "0987654321"}', '0', 'Transacción aprobada', TRUE);
+
+--Expandir la columna operacion tabla pagos
+ALTER TABLE ferremas_db.webpay_log 
+MODIFY COLUMN operacion VARCHAR(50) NOT NULL;
