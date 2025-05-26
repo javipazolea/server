@@ -1,4 +1,3 @@
-// routes/divisas.js - Integración simplificada del sistema de divisas
 const express = require("express");
 const axios = require("axios");
 const db = require("../utils/db");
@@ -10,7 +9,7 @@ const BCCH_CONFIG = {
   baseURL: "https://si3.bcentral.cl/SieteRestWS/SieteRestWS.ashx",
   user: process.env.BCCH_USER || "j.olea@duocuc.cl",
   password: process.env.BCCH_PASSWORD || "Jungkook97$",
-};
+};  
 
 // Códigos de series del Banco Central
 const SERIES_CODES = {
